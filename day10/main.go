@@ -80,7 +80,6 @@ func breakIntoThrees(input *[]int) *[]*[]int {
 
 func howManyCombos(input []int) int {
 	if len(input) <= 2 {
-		log.Printf("%+v has 1 combo", input)
 		return 1
 	}
 	combos := 0
@@ -93,7 +92,6 @@ func howManyCombos(input []int) int {
 			}
 		}
 	}
-	log.Printf("%+v has %d combos", input, combos)
 	return combos
 }
 

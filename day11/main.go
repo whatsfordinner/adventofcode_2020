@@ -23,6 +23,14 @@ func (f *floor) evaluate() bool {
 	return changes
 }
 
+func (f *floor) tick() {
+	for _, r := range f.spots {
+		for _, c := range r {
+			c.tick()
+		}
+	}
+}
+
 func (f *floor) getAdjacent(r int, c int) []*spot {
 	result := new([]*spot)
 	var startRow int
@@ -56,13 +64,25 @@ func (f *floor) getAdjacent(r int, c int) []*spot {
 
 	for i := startRow; i <= finRow; i++ {
 		for j := startColumn; j <= finColumn; j++ {
-			if i != r && j != c {
+			if !(i == r && j == c) {
 				*result = append(*result, f.spots[r][c])
 			}
 		}
 	}
 
 	return *result
+}
+
+func (f *floor) toString() string {
+	output := "\n"
+	for _, r := range f.spots {
+		for _, c := range r {
+			output += c.currentState
+		}
+		output += "\n"
+	}
+
+	return output
 }
 
 type spot struct {
@@ -94,6 +114,10 @@ func (s *spot) evaluate(adjacent []*spot) bool {
 			s.nextState = "L"
 			return true
 		}
+	}
+
+	if s.currentState == "." {
+		s.nextState = "."
 	}
 
 	return false
@@ -132,13 +156,12 @@ func getInput(filename string) *floor {
 
 func main() {
 	floor := getInput(os.Args[1])
-	output := "\n"
-	for _, row := range floor.spots {
-		for _, col := range row {
-			output += col.currentState
-		}
-		output += "\n"
-	}
+	log.Print(floor.toString())
+	floor.evaluate()
+	floor.tick()
+	log.Print(floor.toString())
+	floor.evaluate()
+	floor.tick()
+	log.Print(floor.toString())
 
-	log.Printf("%s", output)
 }

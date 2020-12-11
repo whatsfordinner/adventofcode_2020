@@ -13,8 +13,8 @@ type floor struct {
 func (f *floor) evaluate() bool {
 	changes := false
 	for i, r := range f.spots {
-		for j, c := range r {
-			if c.evaluate(f.getAdjacent(i, j)) {
+		for j := range r {
+			if f.evaluateLineOfSight(i, j) {
 				changes = true
 			}
 		}
@@ -65,12 +65,141 @@ func (f *floor) getAdjacent(r int, c int) []*spot {
 	for i := startRow; i <= finRow; i++ {
 		for j := startColumn; j <= finColumn; j++ {
 			if !(i == r && j == c) {
-				*result = append(*result, f.spots[r][c])
+				*result = append(*result, f.spots[i][j])
 			}
 		}
 	}
 
 	return *result
+}
+
+func (f *floor) evaluateLineOfSight(r int, c int) bool {
+	occupiedCount := 0
+	// Look Left
+	for i := c - 1; i >= 0; i-- {
+		if f.spots[r][i].currentState == "#" {
+			occupiedCount++
+			break
+		}
+
+		if f.spots[r][i].currentState == "L" {
+			break
+		}
+	}
+
+	// Look Right
+	for i := c + 1; i < len(f.spots[r]); i++ {
+		if f.spots[r][i].currentState == "#" {
+			occupiedCount++
+			break
+		}
+
+		if f.spots[r][i].currentState == "L" {
+			break
+		}
+	}
+
+	// Look Up
+	for i := r - 1; i >= 0; i-- {
+		if f.spots[i][c].currentState == "#" {
+			occupiedCount++
+			break
+		}
+
+		if f.spots[i][c].currentState == "L" {
+			break
+		}
+	}
+
+	// Look Down
+	for i := r + 1; i < len(f.spots); i++ {
+		if f.spots[i][c].currentState == "#" {
+			occupiedCount++
+			break
+		}
+
+		if f.spots[i][c].currentState == "L" {
+			break
+		}
+	}
+	// Look Up-Left
+	for i, j := r-1, c-1; i >= 0 && j >= 0; i, j = i-1, j-1 {
+		if f.spots[i][j].currentState == "#" {
+			occupiedCount++
+			break
+		}
+
+		if f.spots[i][j].currentState == "L" {
+			break
+		}
+	}
+
+	// Look Up-Right
+	for i, j := r-1, c+1; i >= 0 && j < len(f.spots[r]); i, j = i-1, j+1 {
+		if f.spots[i][j].currentState == "#" {
+			occupiedCount++
+			break
+		}
+
+		if f.spots[i][j].currentState == "L" {
+			break
+		}
+	}
+
+	// Look Down-Left
+	for i, j := r+1, c-1; i < len(f.spots) && j >= 0; i, j = i+1, j-1 {
+		if f.spots[i][j].currentState == "#" {
+			occupiedCount++
+			break
+		}
+
+		if f.spots[i][j].currentState == "L" {
+			break
+		}
+	}
+
+	// Look Down-Right
+	for i, j := r+1, c+1; i < len(f.spots) && j < len(f.spots[r]); i, j = i+1, j+1 {
+		if f.spots[i][j].currentState == "#" {
+			occupiedCount++
+			break
+		}
+
+		if f.spots[i][j].currentState == "L" {
+			break
+		}
+	}
+
+	if f.spots[r][c].currentState == "#" && occupiedCount >= 5 {
+		f.spots[r][c].nextState = "L"
+		return true
+	}
+
+	if f.spots[r][c].currentState == "L" && occupiedCount == 0 {
+		f.spots[r][c].nextState = "#"
+		return true
+	}
+
+	if f.spots[r][c].currentState == "." {
+		f.spots[r][c].nextState = "."
+	}
+
+	return false
+
+}
+
+func (f *floor) countOccupied() int {
+	count := 0
+
+	for _, r := range f.spots {
+		for _, c := range r {
+			if c.currentState == "#" {
+				count++
+			}
+		}
+	}
+
+	return count
 }
 
 func (f *floor) toString() string {
@@ -156,12 +285,13 @@ func getInput(filename string) *floor {
 
 func main() {
 	floor := getInput(os.Args[1])
-	log.Print(floor.toString())
-	floor.evaluate()
-	floor.tick()
-	log.Print(floor.toString())
-	floor.evaluate()
-	floor.tick()
-	log.Print(floor.toString())
-
+	iters := 0
+	for {
+		if !floor.evaluate() {
+			break
+		}
+		iters++
+		floor.tick()
+	}
+	log.Printf("Stable after %d iterations with %d seats occupied", iters, floor.countOccupied())
 }

@@ -1,6 +1,6 @@
 # Advent of Code 2020
 
-My attempts at [Advent of Code 2020]()!  
+My attempts at [Advent of Code 2020](https://adventofcode.com/2020)!  
 
 All of these run with Go and use the built-in libraries. You can run them yourself with:
 
